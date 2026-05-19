@@ -52,6 +52,10 @@ services:
       MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo:27017/${MONGO_DB:-task_management}?authSource=admin
       RABBITMQ_URI: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
       SWAGGER_PATH: ${SWAGGER_PATH:-docs}
+      JWT_SECRET: ${JWT_SECRET:-w9Xk$2!pL7&mZv@qR1!4yJ8vB5!3x%T0}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin!1234}
     ports:
       - "${SERVER_PORT:-3000}:3000"
     volumes:

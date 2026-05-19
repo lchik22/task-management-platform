@@ -8,9 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, transform: true }),
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const swaggerPath = config.get<string>('SWAGGER_PATH', 'docs');
   const swaggerConfig = new DocumentBuilder()
@@ -25,9 +23,8 @@ async function bootstrap() {
   const port = config.get<number>('PORT', 3000);
   await app.listen(port);
 
-  // eslint-disable-next-line no-console
   console.log(`API running on http://localhost:${port}`);
-  // eslint-disable-next-line no-console
+
   console.log(`Swagger docs on http://localhost:${port}/${swaggerPath}`);
 }
 bootstrap();
