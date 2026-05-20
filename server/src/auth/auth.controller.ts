@@ -12,12 +12,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AcceptInvitationDto } from '../invitations/dto/accept-invitation.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import type { JwtPayload } from './types/jwt-payload.type';
 
 @ApiTags('auth')
@@ -29,14 +29,15 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Post('register')
+  @Post('accept-invitation')
   @HttpCode(201)
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiOperation({ summary: 'Complete registration using an invitation token' })
   @ApiResponse({ status: 201, description: 'User created and signed in' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 400, description: 'Invalid or already used token' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
-  register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  @ApiResponse({ status: 410, description: 'Invitation has expired' })
+  acceptInvitation(@Body() dto: AcceptInvitationDto) {
+    return this.auth.acceptInvitation(dto);
   }
 
   @Public()

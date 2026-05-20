@@ -1,15 +1,12 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { AcceptInvitationDto } from '../invitations/dto/accept-invitation.dto';
+import { InvitationsService } from '../invitations/invitations.service';
 import { UserDocument } from '../users/schemas/user.schema';
 import { Role } from '../users/types/role.enum';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import { JwtPayload } from './types/jwt-payload.type';
 
 export interface AuthResponse {
@@ -21,16 +18,15 @@ export interface AuthResponse {
 export class AuthService {
   constructor(
     private readonly users: UsersService,
+    private readonly invitations: InvitationsService,
     private readonly jwt: JwtService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
-    if (await this.users.existsByEmail(dto.email)) {
-      throw new ConflictException('Email already registered');
-    }
+  async acceptInvitation(dto: AcceptInvitationDto): Promise<AuthResponse> {
+    const invitation = await this.invitations.consume(dto.token);
 
     const user = await this.users.create({
-      email: dto.email,
+      email: invitation.email,
       password: dto.password,
       firstName: dto.firstName,
       lastName: dto.lastName,

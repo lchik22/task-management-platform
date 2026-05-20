@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { envValidationSchema } from './config/env.validation';
+import { InvitationsModule } from './invitations/invitations.module';
+import { MailModule } from './mail/mail.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -24,7 +26,9 @@ import { UsersModule } from './users/users.module';
         uri: config.getOrThrow<string>('MONGO_URI'),
       }),
     }),
+    MailModule,
     UsersModule,
+    InvitationsModule,
     AuthModule,
   ],
   controllers: [AppController],

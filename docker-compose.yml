@@ -37,6 +37,15 @@ services:
       retries: 5
     networks: [tmp-net]
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: tmp-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    networks: [tmp-net]
+
   server:
     build: ./server
     container_name: tmp-server
@@ -46,6 +55,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     environment:
       NODE_ENV: development
       PORT: 3000
@@ -56,6 +67,10 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin!1234}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-no-reply@tmp.local}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
     ports:
       - "${SERVER_PORT:-3000}:3000"
     volumes:
