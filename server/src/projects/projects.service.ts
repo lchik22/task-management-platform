@@ -2,11 +2,14 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { TasksService } from '../tasks/tasks.service';
 import { UsersService } from '../users/users.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -28,6 +31,8 @@ export class ProjectsService {
     @InjectModel(ProjectInvitation.name)
     private readonly invitationModel: Model<ProjectInvitationDocument>,
     private readonly users: UsersService,
+    @Inject(forwardRef(() => TasksService))
+    private readonly tasks: TasksService,
   ) {}
 
   async create(
@@ -98,6 +103,7 @@ export class ProjectsService {
     this.requireOwner(project, userId);
 
     await this.invitationModel.deleteMany({ project: project._id }).exec();
+    await this.tasks.deleteAllForProject(project._id);
     await this.projectModel.deleteOne({ _id: project._id }).exec();
   }
 
@@ -112,6 +118,7 @@ export class ProjectsService {
     }
 
     project.members = project.members.filter((m) => !m.user.equals(userId));
+    await this.tasks.unassignUserFromProjectTasks(project._id, userId);
     await project.save();
   }
 
@@ -138,6 +145,7 @@ export class ProjectsService {
       throw new NotFoundException('Member not found');
     }
 
+    await this.tasks.unassignUserFromProjectTasks(project._id, target);
     await project.save();
   }
 

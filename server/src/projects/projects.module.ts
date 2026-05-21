@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TasksModule } from '../tasks/tasks.module';
 import { UsersModule } from '../users/users.module';
 import { MyProjectInvitationsController } from './my-project-invitations.controller';
 import { ProjectsController } from './projects.controller';
@@ -17,6 +18,7 @@ import { Project, ProjectSchema } from './schemas/project.schema';
       { name: ProjectInvitation.name, schema: ProjectInvitationSchema },
     ]),
     UsersModule,
+    forwardRef(() => TasksModule),
   ],
   controllers: [ProjectsController, MyProjectInvitationsController],
   providers: [ProjectsService],

@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsHexadecimal, IsNotEmpty, IsString, Length, MinLength } from 'class-validator';
+import {
+  IsHexadecimal,
+  IsNotEmpty,
+  IsString,
+  Length,
+  MinLength,
+} from 'class-validator';
 
 export class AcceptInvitationDto {
   @ApiProperty({

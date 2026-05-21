@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -37,10 +30,7 @@ export class InvitationsController {
     status: 409,
     description: 'Email already registered or has a pending invitation',
   })
-  create(
-    @Body() dto: CreateInvitationDto,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  create(@Body() dto: CreateInvitationDto, @CurrentUser() user: JwtPayload) {
     return this.invitations.create(dto.email, new Types.ObjectId(user.sub));
   }
 

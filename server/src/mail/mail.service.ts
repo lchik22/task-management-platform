@@ -18,7 +18,9 @@ export class MailService implements OnModuleDestroy {
       ignoreTLS: true,
     });
     this.mailFrom = config.getOrThrow<string>('MAIL_FROM');
-    this.appBaseUrl = config.getOrThrow<string>('APP_BASE_URL').replace(/\/$/, '');
+    this.appBaseUrl = config
+      .getOrThrow<string>('APP_BASE_URL')
+      .replace(/\/$/, '');
   }
 
   onModuleDestroy(): void {

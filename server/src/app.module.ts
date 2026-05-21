@@ -11,6 +11,7 @@ import { envValidationSchema } from './config/env.validation';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
 import { ProjectsModule } from './projects/projects.module';
+import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     InvitationsModule,
     ProjectsModule,
+    TasksModule,
     AuthModule,
   ],
   controllers: [AppController],
