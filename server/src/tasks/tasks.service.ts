@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { EventsPublisher } from '../messaging/events.publisher';
+import { NotificationEvent } from '../messaging/messaging.constants';
 import { ProjectsService } from '../projects/projects.service';
 import { ProjectDocument } from '../projects/schemas/project.schema';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -24,6 +26,7 @@ export class TasksService {
     private readonly taskModel: Model<TaskDocument>,
     @Inject(forwardRef(() => ProjectsService))
     private readonly projects: ProjectsService,
+    private readonly events: EventsPublisher,
   ) {}
 
   async create(
@@ -38,7 +41,7 @@ export class TasksService {
       assignee = this.requireAssigneeIsMember(project, dto.assignee);
     }
 
-    return this.taskModel.create({
+    const task = await this.taskModel.create({
       project: project._id,
       title: dto.title,
       description: dto.description,
@@ -47,6 +50,19 @@ export class TasksService {
       creator: userId,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
     });
+
+    if (assignee && !assignee.equals(userId)) {
+      this.events.publish(NotificationEvent.TaskAssigned, {
+        taskId: task.id,
+        projectId: project.id,
+        projectTitle: project.title,
+        taskTitle: task.title,
+        assigneeId: assignee.toString(),
+        actorId: userId.toString(),
+      });
+    }
+
+    return task;
   }
 
   async listForProject(
@@ -85,6 +101,8 @@ export class TasksService {
     const task = await this.loadTask(projectId, taskId);
     this.requireWriteAccess(task, project, userId);
 
+    const previousAssignee = task.assignee;
+
     if (dto.title !== undefined) task.title = dto.title;
     if (dto.description !== undefined) task.description = dto.description;
     if (dto.priority !== undefined) task.priority = dto.priority;
@@ -99,6 +117,23 @@ export class TasksService {
     }
 
     await task.save();
+
+    if (
+      dto.assignee !== undefined &&
+      task.assignee &&
+      !task.assignee.equals(userId) &&
+      (!previousAssignee || !previousAssignee.equals(task.assignee))
+    ) {
+      this.events.publish(NotificationEvent.TaskAssigned, {
+        taskId: task.id,
+        projectId: project.id,
+        projectTitle: project.title,
+        taskTitle: task.title,
+        assigneeId: task.assignee.toString(),
+        actorId: userId.toString(),
+      });
+    }
+
     return task;
   }
 
@@ -112,8 +147,26 @@ export class TasksService {
     const task = await this.loadTask(projectId, taskId);
     this.requireStatusAccess(task, project, userId);
 
+    const previousStatus = task.status;
+    if (previousStatus === dto.status) {
+      return task;
+    }
+
     task.status = dto.status;
     await task.save();
+
+    this.events.publish(NotificationEvent.TaskStatusChanged, {
+      taskId: task.id,
+      projectId: project.id,
+      projectTitle: project.title,
+      taskTitle: task.title,
+      previousStatus,
+      newStatus: task.status,
+      creatorId: task.creator.toString(),
+      assigneeId: task.assignee ? task.assignee.toString() : null,
+      actorId: userId.toString(),
+    });
+
     return task;
   }
 

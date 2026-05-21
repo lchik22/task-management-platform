@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { EventsPublisher } from '../messaging/events.publisher';
+import { NotificationEvent } from '../messaging/messaging.constants';
 import { TasksService } from '../tasks/tasks.service';
 import { UsersService } from '../users/users.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -33,6 +35,7 @@ export class ProjectsService {
     private readonly users: UsersService,
     @Inject(forwardRef(() => TasksService))
     private readonly tasks: TasksService,
+    private readonly events: EventsPublisher,
   ) {}
 
   async create(
@@ -147,6 +150,13 @@ export class ProjectsService {
 
     await this.tasks.unassignUserFromProjectTasks(project._id, target);
     await project.save();
+
+    this.events.publish(NotificationEvent.ProjectMemberRemoved, {
+      projectId: project.id,
+      projectTitle: project.title,
+      removedUserId: target.toString(),
+      actorId: actingUserId.toString(),
+    });
   }
 
   async createInvitation(
@@ -257,6 +267,7 @@ export class ProjectsService {
       throw new NotFoundException('Project no longer exists');
     }
 
+    let memberAdded = false;
     if (!project.members.some((m) => m.user.equals(userId))) {
       project.members.push({
         user: userId,
@@ -264,10 +275,22 @@ export class ProjectsService {
         joinedAt: new Date(),
       });
       await project.save();
+      memberAdded = true;
     }
 
     invitation.status = ProjectInvitationStatus.ACCEPTED;
     await invitation.save();
+
+    if (memberAdded) {
+      this.events.publish(NotificationEvent.ProjectMemberAdded, {
+        projectId: project.id,
+        projectTitle: project.title,
+        memberId: userId.toString(),
+        ownerId: project.owner.toString(),
+        actorId: userId.toString(),
+      });
+    }
+
     return invitation;
   }
 
