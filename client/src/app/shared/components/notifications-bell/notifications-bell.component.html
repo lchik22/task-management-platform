@@ -1,0 +1,6 @@
+<a routerLink="/notifications" class="bell" [attr.aria-label]="ariaLabel()">
+  <span aria-hidden="true">🔔</span>
+  @if (count() > 0) {
+    <span class="count" aria-hidden="true">{{ countLabel() }}</span>
+  }
+</a>

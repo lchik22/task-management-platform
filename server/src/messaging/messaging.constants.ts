@@ -6,6 +6,7 @@ export const NotificationEvent = {
   TaskStatusChanged: 'task.status_changed',
   ProjectMemberAdded: 'project.member_added',
   ProjectMemberRemoved: 'project.member_removed',
+  ProjectInvitationCreated: 'project.invitation_created',
 } as const;
 
 export type NotificationEventName =

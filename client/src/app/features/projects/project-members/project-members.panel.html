@@ -1,0 +1,31 @@
+<section class="card" aria-labelledby="members-title">
+  <h2 id="members-title">Members</h2>
+  @if (error(); as msg) {
+    <div role="alert" class="alert alert-error">{{ msg }}</div>
+  }
+  <ul class="members">
+    @for (m of project().members; track m.user) {
+      <li>
+        <span>
+          <span class="badge" [class.badge-info]="m.role === 'OWNER'">
+            {{ m.role }}
+          </span>
+          <code class="muted">{{ m.user }}</code>
+          <span class="muted small">
+            · joined {{ m.joinedAt | date: 'mediumDate' }}
+          </span>
+        </span>
+        @if (isOwner() && m.role !== 'OWNER') {
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            (click)="remove(m.user)"
+            [disabled]="busyId() === m.user"
+          >
+            {{ busyId() === m.user ? 'Removing…' : 'Remove' }}
+          </button>
+        }
+      </li>
+    }
+  </ul>
+</section>

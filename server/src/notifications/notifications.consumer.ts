@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import type { Channel, ConsumeMessage } from 'amqplib';
 import type {
+  ProjectInvitationCreatedPayload,
   ProjectMemberAddedPayload,
   ProjectMemberRemovedPayload,
   TaskAssignedPayload,
@@ -53,6 +54,18 @@ export class NotificationsConsumer {
   ): Promise<void> {
     await this.process(NotificationEvent.ProjectMemberRemoved, context, () =>
       this.notifications.onProjectMemberRemoved(payload),
+    );
+  }
+
+  @EventPattern(NotificationEvent.ProjectInvitationCreated)
+  async handleProjectInvitationCreated(
+    @Payload() payload: ProjectInvitationCreatedPayload,
+    @Ctx() context: RmqContext,
+  ): Promise<void> {
+    await this.process(
+      NotificationEvent.ProjectInvitationCreated,
+      context,
+      () => this.notifications.onProjectInvitationCreated(payload),
     );
   }
 

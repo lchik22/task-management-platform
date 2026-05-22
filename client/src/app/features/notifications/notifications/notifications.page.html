@@ -1,0 +1,81 @@
+<div class="stack">
+  <header class="row" style="justify-content: space-between">
+    <div>
+      <h1>Notifications</h1>
+      <p class="muted">Recent activity affecting you.</p>
+    </div>
+    <div class="row">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="toggleUnreadOnly()"
+        [attr.aria-pressed]="unreadOnly()"
+      >
+        {{ unreadOnly() ? 'Showing unread' : 'Showing all' }}
+      </button>
+      <button
+        type="button"
+        class="btn"
+        (click)="markAllRead()"
+        [disabled]="markingAll()"
+      >
+        {{ markingAll() ? 'Marking…' : 'Mark all read' }}
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (loadError(); as msg) {
+    <div role="alert" class="alert alert-error">{{ msg }}</div>
+  } @else if (items().length === 0) {
+    <p class="empty">You have no notifications.</p>
+  } @else {
+    <ul class="list">
+      @for (n of items(); track n.id) {
+        <li class="card" [class.unread]="!n.read">
+          <div class="row" style="justify-content: space-between">
+            <div>
+              <h2>{{ title(n) }}</h2>
+              <p class="muted">{{ summary(n) }}</p>
+              <p class="muted small">{{ n.createdAt | date: 'medium' }}</p>
+            </div>
+            <div class="row">
+              @if (action(n); as act) {
+                <a
+                  class="btn btn-ghost btn-sm"
+                  [routerLink]="act.route"
+                >{{ act.label }}</a>
+              }
+              @if (!n.read) {
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="markRead(n)"
+                  [disabled]="busyId() === n.id"
+                >
+                  {{ busyId() === n.id ? 'Marking…' : 'Mark read' }}
+                </button>
+              } @else {
+                <span class="badge">Read</span>
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (nextCursor()) {
+      <div class="row" style="justify-content: center">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="loadMore()"
+          [disabled]="loadingMore()"
+        >
+          {{ loadingMore() ? 'Loading…' : 'Load more' }}
+        </button>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,15 @@
+.project-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.small {
+  font-size: 0.85rem;
+}

@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
+  ProjectInvitationCreatedPayload,
   ProjectMemberAddedPayload,
   ProjectMemberRemovedPayload,
   TaskAssignedPayload,
@@ -80,6 +81,21 @@ export class NotificationsService {
     await this.create(recipients, NotificationType.ProjectMemberRemoved, {
       projectId: payload.projectId,
       projectTitle: payload.projectTitle,
+    });
+  }
+
+  async onProjectInvitationCreated(
+    payload: ProjectInvitationCreatedPayload,
+  ): Promise<void> {
+    const recipients = this.uniqueRecipients(
+      [payload.inviteeId],
+      payload.actorId,
+    );
+    await this.create(recipients, NotificationType.ProjectInvitationCreated, {
+      invitationId: payload.invitationId,
+      projectId: payload.projectId,
+      projectTitle: payload.projectTitle,
+      inviterId: payload.inviterId,
     });
   }
 

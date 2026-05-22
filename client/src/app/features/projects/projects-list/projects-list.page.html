@@ -1,0 +1,84 @@
+<div class="stack">
+  <header class="row" style="justify-content: space-between">
+    <div>
+      <h1>Projects</h1>
+      <p class="muted">Projects you own or are a member of.</p>
+    </div>
+  </header>
+
+  <section class="card" aria-labelledby="create-title">
+    <h2 id="create-title">Create a project</h2>
+    @if (formError(); as msg) {
+      <div role="alert" class="alert alert-error">{{ msg }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="proj-title">Title</label>
+        <input
+          id="proj-title"
+          type="text"
+          formControlName="title"
+          maxlength="200"
+          required
+        />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <p class="field-error">Title is required (max 200 chars).</p>
+        }
+      </div>
+      <div class="field">
+        <label for="proj-desc">Description (optional)</label>
+        <textarea
+          id="proj-desc"
+          formControlName="description"
+          maxlength="2000"
+        ></textarea>
+      </div>
+      <button
+        type="submit"
+        class="btn"
+        [disabled]="submitting() || form.invalid"
+      >
+        {{ submitting() ? 'Creating…' : 'Create project' }}
+      </button>
+    </form>
+  </section>
+
+  <section aria-labelledby="list-title">
+    <h2 id="list-title">Your projects</h2>
+    @if (loading()) {
+      <p class="muted">Loading…</p>
+    } @else if (loadError(); as err) {
+      <div role="alert" class="alert alert-error">{{ err }}</div>
+    } @else if (projects().length === 0) {
+      <p class="empty">You aren't part of any projects yet.</p>
+    } @else {
+      <div class="grid grid-cards">
+        @for (p of projects(); track p.id) {
+          <article class="card project-card" [attr.aria-labelledby]="'p-' + p.id">
+            <header>
+              <h3 id="p-{{ p.id }}">
+                <a [routerLink]="['/projects', p.id]">{{ p.title }}</a>
+              </h3>
+              <span class="badge" [class.badge-info]="p.role === 'OWNER'">
+                {{ p.role }}
+              </span>
+            </header>
+            @if (p.description) {
+              <p class="muted">{{ p.description }}</p>
+            }
+            <footer class="row" style="justify-content: space-between">
+              <span class="muted small">
+                {{ p.members.length }} member{{
+                  p.members.length === 1 ? '' : 's'
+                }}
+              </span>
+              <span class="muted small">
+                Created {{ p.createdAt | date: 'mediumDate' }}
+              </span>
+            </footer>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</div>

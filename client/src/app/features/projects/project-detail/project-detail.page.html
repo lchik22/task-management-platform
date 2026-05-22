@@ -1,0 +1,160 @@
+@if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (loadError(); as err) {
+  <div role="alert" class="alert alert-error">{{ err }}</div>
+} @else if (project(); as proj) {
+  <div class="stack">
+    <header class="row" style="justify-content: space-between">
+      <div>
+        <h1>{{ proj.title }}</h1>
+        @if (proj.description) {
+          <p class="muted">{{ proj.description }}</p>
+        }
+        <p class="muted small">
+          Created {{ proj.createdAt | date: 'medium' }} · You are a
+          <strong>{{ myRole() }}</strong>
+        </p>
+      </div>
+      <div class="row">
+        @if (!isOwner()) {
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            (click)="leave()"
+            [disabled]="busyLeave()"
+          >
+            {{ busyLeave() ? 'Leaving…' : 'Leave project' }}
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-danger btn-sm"
+            (click)="deleteProject()"
+            [disabled]="busyDelete()"
+          >
+            {{ busyDelete() ? 'Deleting…' : 'Delete project' }}
+          </button>
+        }
+      </div>
+    </header>
+
+    @if (actionError(); as msg) {
+      <div role="alert" class="alert alert-error">{{ msg }}</div>
+    }
+
+    @if (isOwner()) {
+      <section class="card" aria-labelledby="edit-title">
+        <h2 id="edit-title">Edit project</h2>
+        <form [formGroup]="editForm" (ngSubmit)="saveEdit()" novalidate>
+          <div class="field">
+            <label for="edit-title-input">Title</label>
+            <input
+              id="edit-title-input"
+              type="text"
+              formControlName="title"
+              maxlength="200"
+            />
+          </div>
+          <div class="field">
+            <label for="edit-desc">Description</label>
+            <textarea
+              id="edit-desc"
+              formControlName="description"
+              maxlength="2000"
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            [disabled]="savingEdit() || editForm.invalid"
+          >
+            {{ savingEdit() ? 'Saving…' : 'Save changes' }}
+          </button>
+        </form>
+      </section>
+    }
+
+    <app-project-members-panel
+      [project]="proj"
+      [isOwner]="isOwner()"
+      (removed)="onMemberRemoved($event)"
+    />
+
+    @if (isOwner()) {
+      <section class="card" aria-labelledby="invite-title">
+        <h2 id="invite-title">Invite a registered user</h2>
+        <p class="muted small">
+          Enter the email of a user who already has an account. They will see
+          the invitation in their notifications.
+        </p>
+
+        @if (inviteError(); as msg) {
+          <div role="alert" class="alert alert-error">{{ msg }}</div>
+        }
+        @if (inviteSuccess(); as msg) {
+          <div role="status" class="alert alert-success">{{ msg }}</div>
+        }
+
+        <form
+          [formGroup]="inviteForm"
+          (ngSubmit)="invite()"
+          novalidate
+          class="row"
+          style="align-items: flex-end"
+        >
+          <div class="field" style="flex: 1; min-width: 220px">
+            <label for="invite-input">Email</label>
+            <input
+              id="invite-input"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn"
+            [disabled]="inviteSubmitting() || inviteForm.invalid"
+          >
+            {{ inviteSubmitting() ? 'Sending…' : 'Send invitation' }}
+          </button>
+        </form>
+
+        <h3 style="margin-top: 1rem">Project invitations</h3>
+        @if (invitations().length === 0) {
+          <p class="muted">No invitations yet.</p>
+        } @else {
+          <ul class="invite-list">
+            @for (inv of invitations(); track inv.id) {
+              <li>
+                <span>
+                  <strong>{{ inviteeEmail(inv) }}</strong>
+                  <span class="muted">
+                    — {{ inv.status }} ·
+                    {{ inv.createdAt | date: 'mediumDate' }}
+                  </span>
+                </span>
+                @if (inv.status === 'PENDING') {
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    (click)="revokeInvitation(inv)"
+                    [disabled]="busyInvId() === inv.id"
+                  >
+                    {{ busyInvId() === inv.id ? 'Revoking…' : 'Revoke' }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+
+    <app-project-tasks-panel
+      [project]="proj"
+      [canManage]="isOwner()"
+      [currentUserId]="currentUserId() ?? ''"
+    />
+  </div>
+}

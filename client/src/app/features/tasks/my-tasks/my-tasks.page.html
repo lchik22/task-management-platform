@@ -1,0 +1,60 @@
+<div class="stack">
+  <header class="row" style="justify-content: space-between">
+    <div>
+      <h1>My tasks</h1>
+      <p class="muted">Tasks assigned to you across every project.</p>
+    </div>
+    <div>
+      <label for="status-filter" class="visually-hidden">
+        Filter by status
+      </label>
+      <select
+        id="status-filter"
+        [value]="statusFilter() ?? ''"
+        (change)="onStatusChange($event)"
+      >
+        <option value="">All statuses</option>
+        <option value="TODO">To do</option>
+        <option value="IN_PROGRESS">In progress</option>
+        <option value="DONE">Done</option>
+      </select>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (loadError(); as msg) {
+    <div role="alert" class="alert alert-error">{{ msg }}</div>
+  } @else if (tasks().length === 0) {
+    <p class="empty">No tasks assigned to you.</p>
+  } @else {
+    <ul class="my-tasks">
+      @for (task of tasks(); track task.id) {
+        <li class="card">
+          <header class="row" style="justify-content: space-between">
+            <h2>{{ task.title }}</h2>
+            <span
+              class="badge"
+              [class.badge-info]="task.status === 'IN_PROGRESS'"
+              [class.badge-success]="task.status === 'DONE'"
+            >
+              {{ statusLabel(task.status) }}
+            </span>
+          </header>
+          @if (task.description) {
+            <p class="muted">{{ task.description }}</p>
+          }
+          <p class="muted small">
+            Priority: {{ task.priority }}
+            @if (task.dueDate) {
+              · Due {{ task.dueDate | date: 'mediumDate' }}
+            }
+          </p>
+          <p>
+            <a [routerLink]="['/projects', task.project]">View project</a>
+          </p>
+        </li>
+      }
+    </ul>
+  }
+</div>

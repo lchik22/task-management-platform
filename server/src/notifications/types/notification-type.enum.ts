@@ -5,6 +5,7 @@ export const NotificationType = {
   TaskStatusChanged: NotificationEvent.TaskStatusChanged,
   ProjectMemberAdded: NotificationEvent.ProjectMemberAdded,
   ProjectMemberRemoved: NotificationEvent.ProjectMemberRemoved,
+  ProjectInvitationCreated: NotificationEvent.ProjectInvitationCreated,
 } as const;
 
 export type NotificationTypeName =

@@ -1,0 +1,112 @@
+<div class="stack">
+  <header class="row" style="justify-content: space-between">
+    <div>
+      <h1>Invitations</h1>
+      <p class="muted">
+        Invite people to register on the platform. Each invitation is emailed
+        and expires after 7 days.
+      </p>
+    </div>
+  </header>
+
+  <section class="card" aria-labelledby="invite-title">
+    <h2 id="invite-title">Invite a new user</h2>
+    @if (formError(); as msg) {
+      <div role="alert" class="alert alert-error">{{ msg }}</div>
+    }
+    @if (successEmail(); as email) {
+      <div role="status" class="alert alert-success">
+        Invitation sent to {{ email }}.
+      </div>
+    }
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+      class="row"
+      style="align-items: flex-end"
+    >
+      <div class="field" style="flex: 1; min-width: 220px">
+        <label for="invite-email">Email</label>
+        <input
+          id="invite-email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          required
+        />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <p class="field-error">Enter a valid email address.</p>
+        }
+      </div>
+      <button
+        type="submit"
+        class="btn"
+        [disabled]="submitting() || form.invalid"
+      >
+        {{ submitting() ? 'Sending…' : 'Send invitation' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="all-title">
+    <h2 id="all-title">All invitations</h2>
+    @if (loading()) {
+      <p class="muted">Loading…</p>
+    } @else if (loadError(); as err) {
+      <div role="alert" class="alert alert-error">{{ err }}</div>
+    } @else if (invitations().length === 0) {
+      <p class="empty">No invitations yet.</p>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <caption class="visually-hidden">List of all invitations</caption>
+          <thead>
+            <tr>
+              <th scope="col">Email</th>
+              <th scope="col">Status</th>
+              <th scope="col">Created</th>
+              <th scope="col">Expires</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inv of invitations(); track inv.id) {
+              <tr>
+                <td>{{ inv.email }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge-warning]="inv.status === 'PENDING'"
+                    [class.badge-success]="inv.status === 'ACCEPTED'"
+                    [class.badge-danger]="
+                      inv.status === 'REVOKED' || inv.status === 'EXPIRED'
+                    "
+                  >
+                    {{ inv.status }}
+                  </span>
+                </td>
+                <td>{{ inv.createdAt | date: 'medium' }}</td>
+                <td>{{ inv.expiresAt | date: 'medium' }}</td>
+                <td>
+                  @if (inv.status === 'PENDING') {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      (click)="revoke(inv)"
+                      [disabled]="busyId() === inv.id"
+                    >
+                      {{ busyId() === inv.id ? 'Revoking…' : 'Revoke' }}
+                    </button>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

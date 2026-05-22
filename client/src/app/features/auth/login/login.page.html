@@ -1,0 +1,60 @@
+<div class="auth-wrap">
+  <section class="card auth-card" aria-labelledby="login-title">
+    <h1 id="login-title">Sign in</h1>
+    <p class="muted">Welcome back. Sign in with your email and password.</p>
+
+    @if (errorMessage(); as msg) {
+      <div role="alert" class="alert alert-error">{{ msg }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input
+          id="login-email"
+          type="email"
+          autocomplete="email"
+          formControlName="email"
+          aria-describedby="email-error"
+          required
+        />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <p id="email-error" class="field-error">
+            Enter a valid email address.
+          </p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input
+          id="login-password"
+          type="password"
+          autocomplete="current-password"
+          formControlName="password"
+          aria-describedby="password-error"
+          required
+        />
+        @if (
+          form.controls.password.touched && form.controls.password.invalid
+        ) {
+          <p id="password-error" class="field-error">
+            Password must be at least 8 characters.
+          </p>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn"
+        [disabled]="submitting() || form.invalid"
+      >
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+
+    <p class="muted small">
+      Have an invitation? <a routerLink="/register">Set up your account.</a>
+    </p>
+  </section>
+</div>

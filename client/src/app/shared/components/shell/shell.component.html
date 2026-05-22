@@ -1,0 +1,48 @@
+<a class="skip-link" href="#main">Skip to main content</a>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a routerLink="/projects" class="brand">Task Management</a>
+    <nav aria-label="Main">
+      <ul>
+        <li>
+          <a routerLink="/projects" routerLinkActive="active">Projects</a>
+        </li>
+        <li>
+          <a routerLink="/my-tasks" routerLinkActive="active">My tasks</a>
+        </li>
+        <li>
+          <a routerLink="/project-invitations" routerLinkActive="active">
+            Invites
+          </a>
+        </li>
+        @if (isAdmin()) {
+          <li>
+            <a routerLink="/admin/invitations" routerLinkActive="active">
+              Admin invites
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+    <div class="user-area">
+      <app-notifications-bell />
+      @if (user(); as u) {
+        <span class="who">
+          <span aria-hidden="true">{{ initials() }}</span>
+          <span class="visually-hidden">Signed in as </span>
+          <span class="name">{{ u.firstName }} {{ u.lastName }}</span>
+        </span>
+      }
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        (click)="logout()"
+      >
+        Sign out
+      </button>
+    </div>
+  </div>
+</header>
+<main id="main" class="container">
+  <router-outlet />
+</main>

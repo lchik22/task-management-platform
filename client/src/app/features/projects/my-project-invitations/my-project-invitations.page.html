@@ -1,0 +1,50 @@
+<div class="stack">
+  <header>
+    <h1>Project invitations</h1>
+    <p class="muted">Invitations to join projects from other users.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (loadError(); as msg) {
+    <div role="alert" class="alert alert-error">{{ msg }}</div>
+  } @else if (invitations().length === 0) {
+    <p class="empty">No pending invitations.</p>
+  } @else {
+    <ul class="invites">
+      @for (inv of invitations(); track inv.id) {
+        <li class="card">
+          <h2>{{ projectTitle(inv) }}</h2>
+          <p class="muted">
+            Invited by {{ inviterName(inv) }} ·
+            {{ inv.createdAt | date: 'medium' }}
+          </p>
+          <div class="row">
+            <button
+              type="button"
+              class="btn"
+              (click)="accept(inv)"
+              [disabled]="busyId() === inv.id"
+            >
+              {{ busyId() === inv.id ? 'Accepting…' : 'Accept' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="decline(inv)"
+              [disabled]="busyId() === inv.id"
+            >
+              Decline
+            </button>
+            @if (acceptedProjectId() === projectId(inv)) {
+              <a
+                class="btn btn-ghost"
+                [routerLink]="['/projects', projectId(inv)]"
+              >Open project</a>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

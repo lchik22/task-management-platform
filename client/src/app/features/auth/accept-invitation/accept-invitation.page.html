@@ -1,0 +1,100 @@
+<div class="auth-wrap">
+  <section class="card auth-card" aria-labelledby="accept-title">
+    <h1 id="accept-title">Finish creating your account</h1>
+    <p class="muted">
+      Use the invitation link from your email. Set your name and password to
+      continue.
+    </p>
+
+    @if (errorMessage(); as msg) {
+      <div role="alert" class="alert alert-error">{{ msg }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="accept-token">Invitation token</label>
+        <input
+          id="accept-token"
+          type="text"
+          formControlName="token"
+          aria-describedby="token-help token-error"
+          required
+        />
+        <p id="token-help" class="muted small">
+          Auto-filled when you arrived via the email link.
+        </p>
+        @if (form.controls.token.touched && form.controls.token.invalid) {
+          <p id="token-error" class="field-error">
+            Token must be a 64-character hex string.
+          </p>
+        }
+      </div>
+
+      <div class="row two-col">
+        <div class="field">
+          <label for="first-name">First name</label>
+          <input
+            id="first-name"
+            type="text"
+            autocomplete="given-name"
+            formControlName="firstName"
+            required
+          />
+          @if (
+            form.controls.firstName.touched && form.controls.firstName.invalid
+          ) {
+            <p class="field-error">First name is required.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="last-name">Last name</label>
+          <input
+            id="last-name"
+            type="text"
+            autocomplete="family-name"
+            formControlName="lastName"
+            required
+          />
+          @if (
+            form.controls.lastName.touched && form.controls.lastName.invalid
+          ) {
+            <p class="field-error">Last name is required.</p>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="accept-password">Password</label>
+        <input
+          id="accept-password"
+          type="password"
+          autocomplete="new-password"
+          formControlName="password"
+          aria-describedby="password-help password-error"
+          required
+        />
+        <p id="password-help" class="muted small">At least 8 characters.</p>
+        @if (
+          form.controls.password.touched && form.controls.password.invalid
+        ) {
+          <p id="password-error" class="field-error">
+            Password must be at least 8 characters.
+          </p>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn"
+        [disabled]="submitting() || form.invalid"
+      >
+        {{ submitting() ? 'Creating account…' : 'Create account' }}
+      </button>
+    </form>
+
+    <p class="muted small">
+      Already have an account? <a routerLink="/login">Sign in.</a>
+    </p>
+  </section>
+</div>

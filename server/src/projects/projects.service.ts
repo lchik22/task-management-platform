@@ -177,8 +177,9 @@ export class ProjectsService {
       throw new ConflictException('User is already a member of this project');
     }
 
+    let invitation: ProjectInvitationDocument;
     try {
-      return await this.invitationModel.create({
+      invitation = await this.invitationModel.create({
         project: project._id,
         invitee: inviteeId,
         inviter: inviterId,
@@ -196,6 +197,17 @@ export class ProjectsService {
       }
       throw err;
     }
+
+    this.events.publish(NotificationEvent.ProjectInvitationCreated, {
+      invitationId: invitation.id,
+      projectId: project.id,
+      projectTitle: project.title,
+      inviteeId: inviteeId.toString(),
+      inviterId: inviterId.toString(),
+      actorId: inviterId.toString(),
+    });
+
+    return invitation;
   }
 
   async listInvitations(
