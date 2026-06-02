@@ -1,6 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
-import type { Channel, ConsumeMessage } from 'amqplib';
+import { Ctx, EventPattern, KafkaContext, Payload } from '@nestjs/microservices';
 import type {
   ProjectInvitationCreatedPayload,
   ProjectMemberAddedPayload,
@@ -20,7 +19,7 @@ export class NotificationsConsumer {
   @EventPattern(NotificationEvent.TaskAssigned)
   async handleTaskAssigned(
     @Payload() payload: TaskAssignedPayload,
-    @Ctx() context: RmqContext,
+    @Ctx() context: KafkaContext,
   ): Promise<void> {
     await this.process(NotificationEvent.TaskAssigned, context, () =>
       this.notifications.onTaskAssigned(payload),
@@ -30,7 +29,7 @@ export class NotificationsConsumer {
   @EventPattern(NotificationEvent.TaskStatusChanged)
   async handleTaskStatusChanged(
     @Payload() payload: TaskStatusChangedPayload,
-    @Ctx() context: RmqContext,
+    @Ctx() context: KafkaContext,
   ): Promise<void> {
     await this.process(NotificationEvent.TaskStatusChanged, context, () =>
       this.notifications.onTaskStatusChanged(payload),
@@ -40,7 +39,7 @@ export class NotificationsConsumer {
   @EventPattern(NotificationEvent.ProjectMemberAdded)
   async handleProjectMemberAdded(
     @Payload() payload: ProjectMemberAddedPayload,
-    @Ctx() context: RmqContext,
+    @Ctx() context: KafkaContext,
   ): Promise<void> {
     await this.process(NotificationEvent.ProjectMemberAdded, context, () =>
       this.notifications.onProjectMemberAdded(payload),
@@ -50,7 +49,7 @@ export class NotificationsConsumer {
   @EventPattern(NotificationEvent.ProjectMemberRemoved)
   async handleProjectMemberRemoved(
     @Payload() payload: ProjectMemberRemovedPayload,
-    @Ctx() context: RmqContext,
+    @Ctx() context: KafkaContext,
   ): Promise<void> {
     await this.process(NotificationEvent.ProjectMemberRemoved, context, () =>
       this.notifications.onProjectMemberRemoved(payload),
@@ -60,7 +59,7 @@ export class NotificationsConsumer {
   @EventPattern(NotificationEvent.ProjectInvitationCreated)
   async handleProjectInvitationCreated(
     @Payload() payload: ProjectInvitationCreatedPayload,
-    @Ctx() context: RmqContext,
+    @Ctx() context: KafkaContext,
   ): Promise<void> {
     await this.process(
       NotificationEvent.ProjectInvitationCreated,
@@ -71,18 +70,18 @@ export class NotificationsConsumer {
 
   private async process(
     event: string,
-    context: RmqContext,
+    context: KafkaContext,
     handler: () => Promise<void>,
   ): Promise<void> {
-    const channel = context.getChannelRef() as Channel;
-    const message = context.getMessage() as ConsumeMessage;
-    this.logger.debug(`Received ${event}`);
+    const topic = context.getTopic();
+    const partition = context.getPartition();
+    const { offset } = context.getMessage();
+    const location = `${topic}:${partition}@${offset}`;
+    this.logger.debug(`Received ${event} [${location}]`);
     try {
       await handler();
-      channel.ack(message);
     } catch (err) {
-      this.logger.error(`Failed to handle ${event}`, err);
-      channel.nack(message, false, false);
+      this.logger.error(`Failed to handle ${event} [${location}]`, err);
     }
   }
 }

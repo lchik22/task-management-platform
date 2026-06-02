@@ -18,23 +18,52 @@ services:
       retries: 5
     networks: [tmp-net]
 
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    container_name: tmp-rabbitmq
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: tmp-kafka
     restart: unless-stopped
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+      - "${KAFKA_PORT:-9092}:9092"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: CONTROLLER://:9093,INTERNAL://:9094,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9094,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - kafka-data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks: [tmp-net]
+
+  # One-shot: pre-create the event topics so the consumer can subscribe on
+  # startup. kafkajs's subscribe path does not trigger broker auto-creation,
+  # so the server would otherwise crash on first boot against a fresh broker.
+  kafka-init:
+    image: apache/kafka:3.9.0
+    container_name: tmp-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for t in task.assigned task.status_changed project.member_added project.member_removed project.invitation_created; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9094 --create --if-not-exists --topic "$$t" --partitions 1 --replication-factor 1
+        done
+        echo "kafka topics ready"
+    restart: "no"
     networks: [tmp-net]
 
   mailhog:
@@ -53,15 +82,17 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-      rabbitmq:
+      kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       mailhog:
         condition: service_started
     environment:
       NODE_ENV: development
       PORT: 3000
       MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo:27017/${MONGO_DB:-task_management}?authSource=admin
-      RABBITMQ_URI: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
+      KAFKA_BROKERS: kafka:9094
       SWAGGER_PATH: ${SWAGGER_PATH:-docs}
       JWT_SECRET: ${JWT_SECRET:-w9Xk$2!pL7&mZv@qR1!4yJ8vB5!3x%T0}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
@@ -93,7 +124,7 @@ services:
 
 volumes:
   mongo-data:
-  rabbitmq-data:
+  kafka-data:
   server-node-modules:
   client-node-modules:
 

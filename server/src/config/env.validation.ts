@@ -8,9 +8,7 @@ export const envValidationSchema = Joi.object({
   MONGO_URI: Joi.string()
     .uri({ scheme: ['mongodb', 'mongodb+srv'] })
     .required(),
-  RABBITMQ_URI: Joi.string()
-    .uri({ scheme: ['amqp', 'amqps'] })
-    .required(),
+  KAFKA_BROKERS: Joi.string().required(),
   SWAGGER_PATH: Joi.string().default('docs'),
 
   JWT_SECRET: Joi.string().min(16).required(),

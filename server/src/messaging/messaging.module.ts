@@ -3,8 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { EventsPublisher } from './events.publisher';
 import {
+  KAFKA_CLIENT_ID,
   NOTIFICATIONS_CLIENT,
-  NOTIFICATIONS_QUEUE,
 } from './messaging.constants';
 
 @Global()
@@ -16,11 +16,13 @@ import {
         imports: [ConfigModule],
         inject: [ConfigService],
         useFactory: (config: ConfigService) => ({
-          transport: Transport.RMQ,
+          transport: Transport.KAFKA,
           options: {
-            urls: [config.getOrThrow<string>('RABBITMQ_URI')],
-            queue: NOTIFICATIONS_QUEUE,
-            queueOptions: { durable: true },
+            client: {
+              clientId: KAFKA_CLIENT_ID,
+              brokers: config.getOrThrow<string>('KAFKA_BROKERS').split(','),
+            },
+            producerOnlyMode: true,
           },
         }),
       },

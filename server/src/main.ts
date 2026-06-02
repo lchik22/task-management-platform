@@ -4,7 +4,10 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { NOTIFICATIONS_QUEUE } from './messaging/messaging.constants';
+import {
+  KAFKA_CLIENT_ID,
+  NOTIFICATIONS_CONSUMER_GROUP,
+} from './messaging/messaging.constants';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,12 +21,14 @@ async function bootstrap() {
 
   app.connectMicroservice<MicroserviceOptions>(
     {
-      transport: Transport.RMQ,
+      transport: Transport.KAFKA,
       options: {
-        urls: [config.getOrThrow<string>('RABBITMQ_URI')],
-        queue: NOTIFICATIONS_QUEUE,
-        queueOptions: { durable: true },
-        noAck: false,
+        client: {
+          clientId: KAFKA_CLIENT_ID,
+          brokers: config.getOrThrow<string>('KAFKA_BROKERS').split(','),
+        },
+        consumer: { groupId: NOTIFICATIONS_CONSUMER_GROUP },
+        run: { autoCommit: true },
       },
     },
     { inheritAppConfig: true },
@@ -46,7 +51,7 @@ async function bootstrap() {
 
   console.log(`API running on http://localhost:${port}`);
   console.log(
-    `Microservice listening on RabbitMQ queue "${NOTIFICATIONS_QUEUE}"`,
+    `Microservice listening on Kafka (group "${NOTIFICATIONS_CONSUMER_GROUP}")`,
   );
   console.log(`Swagger docs on http://localhost:${port}/${swaggerPath}`);
 }
