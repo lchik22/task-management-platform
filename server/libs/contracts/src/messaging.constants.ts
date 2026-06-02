@@ -1,6 +1,9 @@
 export const NOTIFICATIONS_CLIENT = 'NOTIFICATIONS_CLIENT';
 export const NOTIFICATIONS_CONSUMER_GROUP = 'notifications-consumer';
+// Kafka client id of the monolith (event producer).
 export const KAFKA_CLIENT_ID = 'task-management-server';
+// Kafka client id of the standalone notifications service (event consumer).
+export const NOTIFICATIONS_KAFKA_CLIENT_ID = 'notifications-service';
 
 export const NotificationEvent = {
   TaskAssigned: 'task.assigned',

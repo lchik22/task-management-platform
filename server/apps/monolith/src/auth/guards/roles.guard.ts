@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { Role } from '../../users/types/role.enum';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { JwtPayload } from '../types/jwt-payload.type';
+import { JwtPayload } from '@app/auth';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -29,7 +29,7 @@ export class RolesGuard implements CanActivate {
       .getRequest<Request & { user?: JwtPayload }>();
     const user = request.user;
 
-    if (!user || !required.includes(user.role)) {
+    if (!user || !required.includes(user.role as Role)) {
       throw new ForbiddenException('Insufficient role');
     }
 

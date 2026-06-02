@@ -5,13 +5,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@app/auth';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { envValidationSchema } from './config/env.validation';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MailModule } from './mail/mail.module';
 import { MessagingModule } from './messaging/messaging.module';
-import { NotificationsModule } from './notifications/notifications.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
@@ -37,7 +36,6 @@ import { UsersModule } from './users/users.module';
     ProjectsModule,
     TasksModule,
     AuthModule,
-    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

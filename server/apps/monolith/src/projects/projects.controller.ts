@@ -15,8 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Types } from 'mongoose';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import { CurrentUser, type JwtPayload } from '@app/auth';
 import { CreateProjectInvitationDto } from './dto/create-project-invitation.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';

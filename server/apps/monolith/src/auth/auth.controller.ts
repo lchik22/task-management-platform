@@ -15,10 +15,9 @@ import {
 import { AcceptInvitationDto } from '../invitations/dto/accept-invitation.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { Public } from './decorators/public.decorator';
+import { CurrentUser, Public } from '@app/auth';
 import { LoginDto } from './dto/login.dto';
-import type { JwtPayload } from './types/jwt-payload.type';
+import type { JwtPayload } from '@app/auth';
 
 @ApiTags('auth')
 @Controller('auth')

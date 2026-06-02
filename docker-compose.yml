@@ -1,4 +1,6 @@
 services:
+  # Monolith database (task_management DB). Database-per-service: each service
+  # gets its own Mongo container — separate process, volume, and failure domain.
   mongo:
     image: mongo:7
     container_name: tmp-mongo
@@ -11,6 +13,27 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DB:-task_management}
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [tmp-net]
+
+  # Notifications service database (notifications DB) — its own Mongo container,
+  # fully isolated from the monolith's `mongo` above (separate mongod + volume).
+  mongo-notifications:
+    image: mongo:7
+    container_name: tmp-mongo-notifications
+    restart: unless-stopped
+    ports:
+      - "${MONGO_NOTIFICATIONS_PORT:-27018}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-admin}
+      MONGO_INITDB_DATABASE: ${NOTIFICATIONS_DB:-notifications}
+    volumes:
+      - mongo-notifications-data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 10s
@@ -108,6 +131,31 @@ services:
       - server-node-modules:/app/node_modules
     networks: [tmp-net]
 
+  notifications:
+    build: ./server
+    container_name: tmp-notifications
+    restart: unless-stopped
+    command: npm run start:notifications
+    depends_on:
+      mongo-notifications:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo-notifications:27017/${NOTIFICATIONS_DB:-notifications}?authSource=admin
+      KAFKA_BROKERS: kafka:9094
+      SWAGGER_PATH: ${SWAGGER_PATH:-docs}
+      JWT_SECRET: ${JWT_SECRET:-w9Xk$2!pL7&mZv@qR1!4yJ8vB5!3x%T0}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+    volumes:
+      - ./server:/app
+      - server-node-modules:/app/node_modules
+    networks: [tmp-net]
+
   gateway:
     build: ./server
     container_name: tmp-gateway
@@ -116,10 +164,13 @@ services:
     depends_on:
       monolith:
         condition: service_started
+      notifications:
+        condition: service_started
     environment:
       NODE_ENV: development
       PORT: 3000
       MONOLITH_URL: http://monolith:3001
+      NOTIFICATIONS_URL: http://notifications:3002
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
     ports:
       - "${GATEWAY_PORT:-3000}:3000"
@@ -143,6 +194,7 @@ services:
 
 volumes:
   mongo-data:
+  mongo-notifications-data:
   kafka-data:
   server-node-modules:
   client-node-modules:

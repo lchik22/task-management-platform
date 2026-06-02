@@ -6,8 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Types } from 'mongoose';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import { CurrentUser, type JwtPayload } from '@app/auth';
 import { ListMyTasksQueryDto } from './dto/list-my-tasks-query.dto';
 import { TasksService } from './tasks.service';
 

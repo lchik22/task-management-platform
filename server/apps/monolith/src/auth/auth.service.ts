@@ -7,7 +7,7 @@ import { UserDocument } from '../users/schemas/user.schema';
 import { Role } from '../users/types/role.enum';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
-import { JwtPayload } from './types/jwt-payload.type';
+import { JwtPayload } from '@app/auth';
 
 export interface AuthResponse {
   accessToken: string;

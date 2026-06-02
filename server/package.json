@@ -6,14 +6,16 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build monolith --webpack && nest build gateway --webpack",
+    "build": "nest build monolith --webpack && nest build gateway --webpack && nest build notifications --webpack",
     "build:monolith": "nest build monolith --webpack",
     "build:gateway": "nest build gateway --webpack",
+    "build:notifications": "nest build notifications --webpack",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch monolith",
     "start:monolith": "nest start --watch monolith",
     "start:gateway": "nest start --watch gateway",
+    "start:notifications": "nest start --watch notifications",
     "start:debug": "nest start --debug --watch monolith",
     "start:prod": "node dist/apps/monolith/main",
     "lint": "eslint \"{apps,libs}/**/*.ts\" --fix",
@@ -91,7 +93,8 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "moduleNameMapper": {
-      "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src$1"
+      "^@app/contracts(|/.*)$": "<rootDir>/libs/contracts/src$1",
+      "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

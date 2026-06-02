@@ -16,7 +16,9 @@
     "baseUrl": "./",
     "paths": {
       "@app/contracts": ["libs/contracts/src"],
-      "@app/contracts/*": ["libs/contracts/src/*"]
+      "@app/contracts/*": ["libs/contracts/src/*"],
+      "@app/auth": ["libs/auth/src"],
+      "@app/auth/*": ["libs/auth/src/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

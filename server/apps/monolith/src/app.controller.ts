@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
-import { Public } from './auth/decorators/public.decorator';
+import { Public } from '@app/auth';
 
 @ApiTags('health')
 @Controller()

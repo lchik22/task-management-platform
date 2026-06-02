@@ -6,9 +6,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Types } from 'mongoose';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
-import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import { CurrentUser, type JwtPayload } from '@app/auth';
 import { Role } from '../users/types/role.enum';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { InvitationsService } from './invitations.service';
