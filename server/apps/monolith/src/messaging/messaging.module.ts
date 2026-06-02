@@ -5,7 +5,7 @@ import { EventsPublisher } from './events.publisher';
 import {
   KAFKA_CLIENT_ID,
   NOTIFICATIONS_CLIENT,
-} from './messaging.constants';
+} from '@app/contracts';
 
 @Global()
 @Module({

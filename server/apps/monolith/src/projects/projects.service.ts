@@ -10,7 +10,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { EventsPublisher } from '../messaging/events.publisher';
-import { NotificationEvent } from '../messaging/messaging.constants';
+import { NotificationEvent } from '@app/contracts';
 import { TasksService } from '../tasks/tasks.service';
 import { UsersService } from '../users/users.service';
 import { CreateProjectDto } from './dto/create-project.dto';

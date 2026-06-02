@@ -6,8 +6,8 @@ import type {
   ProjectMemberRemovedPayload,
   TaskAssignedPayload,
   TaskStatusChangedPayload,
-} from '../messaging/events.types';
-import { NotificationEvent } from '../messaging/messaging.constants';
+} from '@app/contracts';
+import { NotificationEvent } from '@app/contracts';
 import { NotificationsService } from './notifications.service';
 
 @Controller()

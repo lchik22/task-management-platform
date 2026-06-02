@@ -75,10 +75,11 @@ services:
       - "${MAILHOG_UI_PORT:-8025}:8025"
     networks: [tmp-net]
 
-  server:
+  monolith:
     build: ./server
-    container_name: tmp-server
+    container_name: tmp-monolith
     restart: unless-stopped
+    command: npm run start:monolith
     depends_on:
       mongo:
         condition: service_healthy
@@ -90,7 +91,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: development
-      PORT: 3000
+      PORT: 3001
       MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo:27017/${MONGO_DB:-task_management}?authSource=admin
       KAFKA_BROKERS: kafka:9094
       SWAGGER_PATH: ${SWAGGER_PATH:-docs}
@@ -102,8 +103,26 @@ services:
       SMTP_PORT: 1025
       MAIL_FROM: ${MAIL_FROM:-no-reply@tmp.local}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+    volumes:
+      - ./server:/app
+      - server-node-modules:/app/node_modules
+    networks: [tmp-net]
+
+  gateway:
+    build: ./server
+    container_name: tmp-gateway
+    restart: unless-stopped
+    command: npm run start:gateway
+    depends_on:
+      monolith:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONOLITH_URL: http://monolith:3001
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
     ports:
-      - "${SERVER_PORT:-3000}:3000"
+      - "${GATEWAY_PORT:-3000}:3000"
     volumes:
       - ./server:/app
       - server-node-modules:/app/node_modules
@@ -114,7 +133,7 @@ services:
     container_name: tmp-client
     restart: unless-stopped
     depends_on:
-      - server
+      - gateway
     ports:
       - "${CLIENT_PORT:-4200}:4200"
     volumes:

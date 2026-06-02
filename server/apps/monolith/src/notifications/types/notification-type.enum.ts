@@ -1,4 +1,4 @@
-import { NotificationEvent } from '../../messaging/messaging.constants';
+import { NotificationEvent } from '@app/contracts';
 
 export const NotificationType = {
   TaskAssigned: NotificationEvent.TaskAssigned,

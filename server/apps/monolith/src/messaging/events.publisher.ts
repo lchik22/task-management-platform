@@ -1,7 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { EventPayloads } from './events.types';
-import { NOTIFICATIONS_CLIENT } from './messaging.constants';
+import { EventPayloads, NOTIFICATIONS_CLIENT } from '@app/contracts';
 
 @Injectable()
 export class EventsPublisher {

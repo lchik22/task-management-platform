@@ -7,7 +7,7 @@ import { AppModule } from './app.module';
 import {
   KAFKA_CLIENT_ID,
   NOTIFICATIONS_CONSUMER_GROUP,
-} from './messaging/messaging.constants';
+} from '@app/contracts';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

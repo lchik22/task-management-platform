@@ -7,7 +7,7 @@ import {
   ProjectMemberRemovedPayload,
   TaskAssignedPayload,
   TaskStatusChangedPayload,
-} from '../messaging/events.types';
+} from '@app/contracts';
 import { ListNotificationsQueryDto } from './dto/list-notifications-query.dto';
 import {
   Notification,

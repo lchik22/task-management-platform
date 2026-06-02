@@ -1,4 +1,3 @@
-import { TaskStatus } from '../tasks/types/task-status.enum';
 import { NotificationEvent } from './messaging.constants';
 
 export interface TaskAssignedPayload {
@@ -15,8 +14,8 @@ export interface TaskStatusChangedPayload {
   projectId: string;
   projectTitle: string;
   taskTitle: string;
-  previousStatus: TaskStatus;
-  newStatus: TaskStatus;
+  previousStatus: string;
+  newStatus: string;
   creatorId: string;
   assigneeId: string | null;
   actorId: string;
