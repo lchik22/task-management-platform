@@ -15,13 +15,19 @@ export interface ProxyRoute {
 export function buildProxyRoutes(config: ConfigService): ProxyRoute[] {
   const monolithUrl =
     config.get<string>('MONOLITH_URL') ?? 'http://localhost:3001';
+  const identityUrl = config.get<string>('IDENTITY_URL');
   const notificationsUrl = config.get<string>('NOTIFICATIONS_URL');
 
   const routes: ProxyRoute[] = [];
 
-  // Strangler-fig seam: carved-out services are matched first; anything not
-  // matched falls through to the monolith catch-all at the bottom. As more
-  // services are extracted, add their routes here, ABOVE the catch-all.
+  // Strangler-fig seam: carved-out services are matched first (disjoint
+  // prefixes); anything not matched falls through to the monolith catch-all at
+  // the bottom. As more services are extracted, add their routes here, ABOVE
+  // the catch-all.
+  if (identityUrl) {
+    routes.push({ target: identityUrl, pathFilter: '/auth' });
+    routes.push({ target: identityUrl, pathFilter: '/invitations' });
+  }
   if (notificationsUrl) {
     routes.push({ target: notificationsUrl, pathFilter: '/notifications' });
   }

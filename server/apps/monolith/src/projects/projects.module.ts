@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { IdentityClientModule } from '../identity-client/identity-client.module';
 import { TasksModule } from '../tasks/tasks.module';
-import { UsersModule } from '../users/users.module';
 import { MyProjectInvitationsController } from './my-project-invitations.controller';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
@@ -17,7 +17,7 @@ import { Project, ProjectSchema } from './schemas/project.schema';
       { name: Project.name, schema: ProjectSchema },
       { name: ProjectInvitation.name, schema: ProjectInvitationSchema },
     ]),
-    UsersModule,
+    IdentityClientModule,
     forwardRef(() => TasksModule),
   ],
   controllers: [ProjectsController, MyProjectInvitationsController],

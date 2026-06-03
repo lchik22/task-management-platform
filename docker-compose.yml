@@ -41,6 +41,27 @@ services:
       retries: 5
     networks: [tmp-net]
 
+  # Identity service database (identity DB) — its own Mongo container, isolated
+  # from the monolith and notifications mongos (separate mongod + volume).
+  mongo-identity:
+    image: mongo:7
+    container_name: tmp-mongo-identity
+    restart: unless-stopped
+    ports:
+      - "${MONGO_IDENTITY_PORT:-27019}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-admin}
+      MONGO_INITDB_DATABASE: ${IDENTITY_DB:-identity}
+    volumes:
+      - mongo-identity-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [tmp-net]
+
   kafka:
     image: apache/kafka:3.9.0
     container_name: tmp-kafka
@@ -110,7 +131,7 @@ services:
         condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
-      mailhog:
+      identity:
         condition: service_started
     environment:
       NODE_ENV: development
@@ -119,13 +140,9 @@ services:
       KAFKA_BROKERS: kafka:9094
       SWAGGER_PATH: ${SWAGGER_PATH:-docs}
       JWT_SECRET: ${JWT_SECRET:-w9Xk$2!pL7&mZv@qR1!4yJ8vB5!3x%T0}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin!1234}
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-      MAIL_FROM: ${MAIL_FROM:-no-reply@tmp.local}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      IDENTITY_URL: http://identity:3003
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key-change-me}
     volumes:
       - ./server:/app
       - server-node-modules:/app/node_modules
@@ -156,6 +173,35 @@ services:
       - server-node-modules:/app/node_modules
     networks: [tmp-net]
 
+  identity:
+    build: ./server
+    container_name: tmp-identity
+    restart: unless-stopped
+    command: npm run start:identity
+    depends_on:
+      mongo-identity:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo-identity:27017/${IDENTITY_DB:-identity}?authSource=admin
+      SWAGGER_PATH: ${SWAGGER_PATH:-docs}
+      JWT_SECRET: ${JWT_SECRET:-w9Xk$2!pL7&mZv@qR1!4yJ8vB5!3x%T0}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin!1234}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-no-reply@tmp.local}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key-change-me}
+    volumes:
+      - ./server:/app
+      - server-node-modules:/app/node_modules
+    networks: [tmp-net]
+
   gateway:
     build: ./server
     container_name: tmp-gateway
@@ -164,12 +210,15 @@ services:
     depends_on:
       monolith:
         condition: service_started
+      identity:
+        condition: service_started
       notifications:
         condition: service_started
     environment:
       NODE_ENV: development
       PORT: 3000
       MONOLITH_URL: http://monolith:3001
+      IDENTITY_URL: http://identity:3003
       NOTIFICATIONS_URL: http://notifications:3002
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
     ports:
@@ -195,6 +244,7 @@ services:
 volumes:
   mongo-data:
   mongo-notifications-data:
+  mongo-identity-data:
   kafka-data:
   server-node-modules:
   client-node-modules:

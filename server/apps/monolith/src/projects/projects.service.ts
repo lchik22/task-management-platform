@@ -11,8 +11,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { EventsPublisher } from '../messaging/events.publisher';
 import { NotificationEvent } from '@app/contracts';
+import { IdentityClient } from '../identity-client/identity.client';
 import { TasksService } from '../tasks/tasks.service';
-import { UsersService } from '../users/users.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import {
@@ -32,7 +32,7 @@ export class ProjectsService {
     private readonly projectModel: Model<ProjectDocument>,
     @InjectModel(ProjectInvitation.name)
     private readonly invitationModel: Model<ProjectInvitationDocument>,
-    private readonly users: UsersService,
+    private readonly identity: IdentityClient,
     @Inject(forwardRef(() => TasksService))
     private readonly tasks: TasksService,
     private readonly events: EventsPublisher,
@@ -167,12 +167,12 @@ export class ProjectsService {
     const project = await this.loadProject(projectId);
     this.requireOwner(project, inviterId);
 
-    const invitee = await this.users.findByEmail(email);
+    const invitee = await this.identity.findByEmail(email);
     if (!invitee) {
       throw new NotFoundException('No registered user with that email');
     }
 
-    const inviteeId = invitee._id;
+    const inviteeId = new Types.ObjectId(invitee.id);
     if (project.members.some((m) => m.user.equals(inviteeId))) {
       throw new ConflictException('User is already a member of this project');
     }
@@ -213,16 +213,16 @@ export class ProjectsService {
   async listInvitations(
     projectId: string,
     userId: Types.ObjectId,
-  ): Promise<ProjectInvitationDocument[]> {
+  ): Promise<Record<string, unknown>[]> {
     const project = await this.loadProject(projectId);
     this.requireOwner(project, userId);
 
-    return this.invitationModel
+    const invitations = await this.invitationModel
       .find({ project: project._id })
-      .populate('invitee', 'firstName lastName email')
-      .populate('inviter', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .exec();
+
+    return this.hydrateInvitations(invitations, ['invitee', 'inviter']);
   }
 
   async revokeInvitation(
@@ -255,15 +255,50 @@ export class ProjectsService {
     return invitation;
   }
 
-  listMyPendingInvitations(
+  async listMyPendingInvitations(
     userId: Types.ObjectId,
-  ): Promise<ProjectInvitationDocument[]> {
-    return this.invitationModel
+  ): Promise<Record<string, unknown>[]> {
+    const invitations = await this.invitationModel
       .find({ invitee: userId, status: ProjectInvitationStatus.PENDING })
       .populate('project', 'title')
-      .populate('inviter', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .exec();
+
+    return this.hydrateInvitations(invitations, ['inviter']);
+  }
+
+  /**
+   * Replaces the cross-DB `.populate()` of user refs: collects the invitee/
+   * inviter ObjectIds, resolves them via Identity's internal API, and returns
+   * plain objects with those fields swapped for the user summary — preserving
+   * the previous populated wire shape. Unknown ids keep their raw id string.
+   */
+  private async hydrateInvitations(
+    invitations: ProjectInvitationDocument[],
+    fields: Array<'invitee' | 'inviter'>,
+  ): Promise<Record<string, unknown>[]> {
+    const ids = new Set<string>();
+    for (const inv of invitations) {
+      for (const field of fields) {
+        const oid = field === 'invitee' ? inv.invitee : inv.inviter;
+        if (oid) ids.add(oid.toString());
+      }
+    }
+
+    const summaries = ids.size ? await this.identity.findByIds([...ids]) : [];
+    const byId = new Map(
+      summaries.map((u) => [u.id, u] as [string, (typeof summaries)[number]]),
+    );
+
+    return invitations.map((inv) => {
+      const obj = inv.toJSON() as unknown as Record<string, unknown>;
+      for (const field of fields) {
+        const oid = field === 'invitee' ? inv.invitee : inv.inviter;
+        const summary = oid ? byId.get(oid.toString()) : undefined;
+        if (summary) obj[field] = summary;
+      }
+      return obj;
+    });
   }
 
   async acceptMyInvitation(

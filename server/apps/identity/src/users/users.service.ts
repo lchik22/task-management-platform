@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Role } from './types/role.enum';
 
@@ -35,6 +35,14 @@ export class UsersService {
 
   findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
+  }
+
+  findByIds(ids: string[]): Promise<UserDocument[]> {
+    const valid = ids.filter((id) => Types.ObjectId.isValid(id));
+    if (valid.length === 0) {
+      return Promise.resolve([]);
+    }
+    return this.userModel.find({ _id: { $in: valid } }).exec();
   }
 
   async existsByEmail(email: string): Promise<boolean> {
