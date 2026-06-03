@@ -1,6 +1,6 @@
 /**
  * Decoded JWT claims shared across services for edge verification.
- * `role` is intentionally typed as `string` (not the monolith's `Role` enum)
+ * `role` is intentionally typed as `string` (not the identity service's `Role` enum)
  * so this lib stays decoupled from the users domain — same approach as the
  * Kafka contract widening TaskStatus to string.
  */

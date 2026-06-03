@@ -1,18 +1,18 @@
 services:
-  # Monolith database (task_management DB). Database-per-service: each service
-  # gets its own Mongo container — separate process, volume, and failure domain.
-  mongo:
+  # Task-management service database (task_management DB). Database-per-service:
+  # each service gets its own Mongo container — separate process + volume.
+  mongo-task-management:
     image: mongo:7
-    container_name: tmp-mongo
+    container_name: tmp-mongo-task-management
     restart: unless-stopped
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "${MONGO_TASK_MANAGEMENT_PORT:-27017}:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-admin}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-task_management}
     volumes:
-      - mongo-data:/data/db
+      - mongo-task-management-data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 10s
@@ -21,7 +21,7 @@ services:
     networks: [tmp-net]
 
   # Notifications service database (notifications DB) — its own Mongo container,
-  # fully isolated from the monolith's `mongo` above (separate mongod + volume).
+  # fully isolated from the other services' mongos (separate mongod + volume).
   mongo-notifications:
     image: mongo:7
     container_name: tmp-mongo-notifications
@@ -42,7 +42,7 @@ services:
     networks: [tmp-net]
 
   # Identity service database (identity DB) — its own Mongo container, isolated
-  # from the monolith and notifications mongos (separate mongod + volume).
+  # from the other services' mongos (separate mongod + volume).
   mongo-identity:
     image: mongo:7
     container_name: tmp-mongo-identity
@@ -119,13 +119,13 @@ services:
       - "${MAILHOG_UI_PORT:-8025}:8025"
     networks: [tmp-net]
 
-  monolith:
+  task-management:
     build: ./server
-    container_name: tmp-monolith
+    container_name: tmp-task-management
     restart: unless-stopped
-    command: npm run start:monolith
+    command: npm run start:task-management
     depends_on:
-      mongo:
+      mongo-task-management:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -136,7 +136,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo:27017/${MONGO_DB:-task_management}?authSource=admin
+      MONGO_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongo-task-management:27017/${MONGO_DB:-task_management}?authSource=admin
       KAFKA_BROKERS: kafka:9094
       SWAGGER_PATH: ${SWAGGER_PATH:-docs}
       JWT_SECRET: ${JWT_SECRET:-w9Xk$2!pL7&mZv@qR1!4yJ8vB5!3x%T0}
@@ -208,7 +208,7 @@ services:
     restart: unless-stopped
     command: npm run start:gateway
     depends_on:
-      monolith:
+      task-management:
         condition: service_started
       identity:
         condition: service_started
@@ -217,7 +217,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      MONOLITH_URL: http://monolith:3001
+      TASK_MANAGEMENT_URL: http://task-management:3001
       IDENTITY_URL: http://identity:3003
       NOTIFICATIONS_URL: http://notifications:3002
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
@@ -242,7 +242,7 @@ services:
     networks: [tmp-net]
 
 volumes:
-  mongo-data:
+  mongo-task-management-data:
   mongo-notifications-data:
   mongo-identity-data:
   kafka-data:

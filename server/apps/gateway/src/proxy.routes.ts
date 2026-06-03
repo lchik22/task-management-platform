@@ -13,17 +13,16 @@ export interface ProxyRoute {
 }
 
 export function buildProxyRoutes(config: ConfigService): ProxyRoute[] {
-  const monolithUrl =
-    config.get<string>('MONOLITH_URL') ?? 'http://localhost:3001';
+  const taskManagementUrl =
+    config.get<string>('TASK_MANAGEMENT_URL') ?? 'http://localhost:3001';
   const identityUrl = config.get<string>('IDENTITY_URL');
   const notificationsUrl = config.get<string>('NOTIFICATIONS_URL');
 
   const routes: ProxyRoute[] = [];
 
-  // Strangler-fig seam: carved-out services are matched first (disjoint
-  // prefixes); anything not matched falls through to the monolith catch-all at
-  // the bottom. As more services are extracted, add their routes here, ABOVE
-  // the catch-all.
+  // Strangler-fig seam: the extracted services are matched first (disjoint
+  // prefixes); anything not matched falls through to the task-management
+  // catch-all at the bottom (projects, tasks, /me/project-invitations, health).
   if (identityUrl) {
     routes.push({ target: identityUrl, pathFilter: '/auth' });
     routes.push({ target: identityUrl, pathFilter: '/invitations' });
@@ -32,7 +31,7 @@ export function buildProxyRoutes(config: ConfigService): ProxyRoute[] {
     routes.push({ target: notificationsUrl, pathFilter: '/notifications' });
   }
 
-  routes.push({ target: monolithUrl });
+  routes.push({ target: taskManagementUrl });
 
   return routes;
 }

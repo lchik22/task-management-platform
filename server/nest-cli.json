@@ -1,21 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/monolith/src",
+  "sourceRoot": "apps/task-management/src",
   "monorepo": true,
-  "root": "apps/monolith",
+  "root": "apps/task-management",
   "compilerOptions": {
     "deleteOutDir": true,
-    "tsConfigPath": "apps/monolith/tsconfig.app.json"
+    "tsConfigPath": "apps/task-management/tsconfig.app.json"
   },
   "projects": {
-    "monolith": {
+    "task-management": {
       "type": "application",
-      "root": "apps/monolith",
+      "root": "apps/task-management",
       "entryFile": "main",
-      "sourceRoot": "apps/monolith/src",
+      "sourceRoot": "apps/task-management/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/monolith/tsconfig.app.json"
+        "tsConfigPath": "apps/task-management/tsconfig.app.json"
       }
     },
     "gateway": {

@@ -16,7 +16,7 @@ async function bootstrap() {
 
   const swaggerPath = config.get<string>('SWAGGER_PATH', 'docs');
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Task Management Platform API')
+    .setTitle('Task Management Service API')
     .setDescription('REST API for the Task Management Platform')
     .setVersion('0.1.0')
     .addBearerAuth()

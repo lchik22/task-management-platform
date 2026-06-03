@@ -24,6 +24,6 @@ export const envValidationSchema = Joi.object({
 
   APP_BASE_URL: Joi.string().uri().required(),
 
-  // Shared secret the monolith presents on the internal user-lookup API.
+  // Shared secret the task-management service presents on the internal user-lookup API.
   INTERNAL_API_KEY: Joi.string().min(8).required(),
 });

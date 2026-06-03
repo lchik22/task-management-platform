@@ -24,7 +24,7 @@ import { TasksModule } from './tasks/tasks.module';
       }),
     }),
     // JWT edge verification (HS256 shared secret) — global guard + strategy.
-    // The monolith no longer issues tokens or checks roles; Identity owns that.
+    // This service no longer issues tokens or checks roles; Identity owns that.
     JwtAuthModule,
     MessagingModule,
     ProjectsModule,
