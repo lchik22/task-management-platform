@@ -10,6 +10,11 @@ export interface ProxyRoute {
    * alike. The original path is forwarded unchanged (no prefix strip).
    */
   pathFilter?: string | string[];
+  /**
+   * Optional path rewrite applied before forwarding (http-proxy-middleware
+   * `pathRewrite`), e.g. to map a gateway-local path onto a service's path.
+   */
+  pathRewrite?: Record<string, string>;
 }
 
 export function buildProxyRoutes(config: ConfigService): ProxyRoute[] {
@@ -19,6 +24,29 @@ export function buildProxyRoutes(config: ConfigService): ProxyRoute[] {
   const notificationsUrl = config.get<string>('NOTIFICATIONS_URL');
 
   const routes: ProxyRoute[] = [];
+
+  // Aggregated API docs: expose each service's OpenAPI JSON under
+  // /api-docs/<service> (rewritten to that service's /docs-json) so the
+  // gateway's single Swagger UI at /docs can list them all in one dropdown.
+  routes.push({
+    target: taskManagementUrl,
+    pathFilter: '/api-docs/task-management',
+    pathRewrite: { '^/api-docs/task-management': '/docs-json' },
+  });
+  if (identityUrl) {
+    routes.push({
+      target: identityUrl,
+      pathFilter: '/api-docs/identity',
+      pathRewrite: { '^/api-docs/identity': '/docs-json' },
+    });
+  }
+  if (notificationsUrl) {
+    routes.push({
+      target: notificationsUrl,
+      pathFilter: '/api-docs/notifications',
+      pathRewrite: { '^/api-docs/notifications': '/docs-json' },
+    });
+  }
 
   // Strangler-fig seam: the extracted services are matched first (disjoint
   // prefixes); anything not matched falls through to the task-management
